@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Anton", "Archivo", sans-serif;
+  --font-body: "Archivo", "Helvetica Neue", sans-serif;
+  --font-mono: "Space Mono", "Courier New", monospace;
+
+  --color-pitch-950: #050505;
+  --color-pitch-900: #0a0a0a;
+  --color-pitch-850: #111111;
+  --color-pitch-800: #1a1a1a;
+  --color-pitch-700: #2a2a2a;
+  --color-pitch-600: #404040;
+  --color-line: rgba(255, 255, 255, 0.1);
+  --color-chalk: #ffffff;
+  --color-chalk-dim: rgba(255, 255, 255, 0.4);
+  --color-lime: #D4FF00;
+  --color-lime-deep: #a8cc00;
+  --color-blaze: #ff4e2e;
+  --color-gold: #ffc14d;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-pitch-950);
+  color: var(--color-chalk);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-lime);
+  color: var(--color-pitch-950);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-pitch-600) var(--color-pitch-950);
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-pitch-950);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-pitch-700);
+  border: 2px solid var(--color-pitch-950);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-lime-deep);
+}
+
+.text-huge {
+  font-size: 180px;
+  line-height: 0.8;
+  letter-spacing: -10px;
+}
+.skew-item {
+  transform: skewX(-5deg);
+}
+.vertical-rail {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* ---------- ambient layers ---------- */
+.pitch-lines {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='640' viewBox='0 0 640 640' fill='none' stroke='%23ffffff' stroke-opacity='0.1' stroke-width='2'><rect x='40' y='40' width='560' height='560'/><circle cx='320' cy='320' r='92'/><circle cx='320' cy='320' r='5' fill='%23ffffff' fill-opacity='0.2' stroke='none'/><line x1='40' y1='320' x2='600' y2='320'/><rect x='215' y='40' width='210' height='92'/><rect x='215' y='508' width='210' height='92'/><path d='M255 132 a65 65 0 0 0 130 0'/><path d='M255 508 a65 65 0 0 1 130 0'/></svg>");
+  background-size: 640px 640px;
+}
+
+.noise-layer {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='0.05'/></svg>");
+}
+
+.ghost-word {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(216, 243, 74, 0.1);
+  user-select: none;
+}
+
+.stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(216, 243, 74, 0.16) 0 8px,
+    transparent 8px 18px
+  );
+}
+
+/* ---------- ticker ---------- */
+@keyframes ticker-run {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ticker-track {
+  animation: ticker-run 38s linear infinite;
+  will-change: transform;
+}
+.ticker-zone:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+/* ---------- skeleton shimmer ---------- */
+@keyframes shimmer {
+  from { background-position: -460px 0; }
+  to { background-position: 460px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #111111 0%, #2a2a2a 45%, #111111 90%);
+  background-size: 920px 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+/* ---------- live dot ---------- */
+@keyframes blink-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+.live-dot {
+  animation: blink-dot 1.4s ease-in-out infinite;
+}
+@keyframes ping-ring {
+  0% { transform: scale(1); opacity: 0.7; }
+  80%, 100% { transform: scale(2.4); opacity: 0; }
+}
+.ping-ring {
+  animation: ping-ring 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* ---------- scroll reveal ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- player swap ---------- */
+@keyframes swap-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.995); }
+  to { opacity: 1; transform: none; }
+}
+.swap-in {
+  animation: swap-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track, .skeleton, .live-dot, .ping-ring, .swap-in {
+    animation: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
