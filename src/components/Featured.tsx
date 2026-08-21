@@ -64,12 +64,12 @@ export default function Featured({ video, queue, categoryName, onSelect }: Featu
           {/* lettore + scheda */}
           <div className="min-w-0">
             <div key={video.id} className="swap-in border border-line bg-pitch-950 p-1.5">
-              <div className="relative aspect-video w-full overflow-hidden bg-pitch-900">
+              <div className={`relative w-full overflow-hidden bg-pitch-900 ${showAd ? "aspect-[4/3] sm:aspect-video min-h-[250px] sm:min-h-0" : "aspect-video"}`}>
                 {showAd ? (
                   <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-pitch-950 p-2 sm:p-4">
-                    <div className="flex-1 w-full max-h-[300px] bg-pitch-900 flex items-center justify-center border border-line">
+                    <div className="flex-1 w-full bg-pitch-900 flex items-center justify-center border border-line overflow-hidden">
                       <ins className="adsbygoogle"
-                           style={{ display: "block", width: "100%", height: "100%" }}
+                           style={{ display: "block", width: "100%" }}
                            data-ad-client="ca-pub-5738943819550045"
                            data-ad-slot="8217548700"
                            data-ad-format="auto"
