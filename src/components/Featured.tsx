@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import type { Video } from "../lib/youtube";
 import { formatDate, formatDuration, formatViews } from "../lib/format";
-import { CalendarIcon, ExternalIcon, EyeIcon, PlayIcon } from "./icons";
+import { CalendarIcon, ExternalIcon, EyeIcon, PlayIcon, ShareIcon, CheckIcon } from "./icons";
 
 interface FeaturedProps {
   video: Video;
@@ -20,7 +20,20 @@ export default function Featured({ video, queue, categoryName, onSelect }: Featu
   const initial = video.channel.trim().charAt(0).toUpperCase() || "Y";
   const [showAd, setShowAd] = useState(false);
   const [countdown, setCountdown] = useState(5);
+  const [copied, setCopied] = useState(false);
   const adPushed = useRef(false);
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const shareUrl = `${window.location.href.split('?')[0]}?v=${video.id}`;
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy", err);
+    }
+  };
 
   useEffect(() => {
     setShowAd(true);
@@ -130,6 +143,14 @@ export default function Featured({ video, queue, categoryName, onSelect }: Featu
                     {formatDuration(video.duration)}
                   </span>
                 )}
+                <button
+                  onClick={handleShare}
+                  className="relative ml-auto flex items-center gap-1.5 border border-line bg-pitch-900/80 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-chalk transition-colors hover:border-lime/60 hover:text-lime sm:px-3 sm:py-2"
+                  title="Condividi video"
+                >
+                  {copied ? <CheckIcon className="h-4 w-4 text-lime" /> : <ShareIcon className="h-4 w-4" />}
+                  <span className="hidden sm:inline">{copied ? "Link Copiato!" : "Condividi"}</span>
+                </button>
               </div>
 
               {video.description && (

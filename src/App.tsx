@@ -221,9 +221,6 @@ export default function App() {
         />
 
         <main>
-          <TrendingSection activeId={featuredId} onSelect={handleSelect} />
-          <RecentlyWatchedSection activeId={featuredId} videos={recentlyWatched} onSelect={handleSelect} onClear={handleClearRecent} />
-
           {/* sezione in onda */}
           <div id="player" className="scroll-mt-[68px]">
             {loading ? (
@@ -249,6 +246,9 @@ export default function App() {
               </section>
             )}
           </div>
+
+          <TrendingSection activeId={featuredId} onSelect={handleSelect} />
+          <RecentlyWatchedSection activeId={featuredId} videos={recentlyWatched} onSelect={handleSelect} onClear={handleClearRecent} />
 
           {/* griglia del reparto */}
           <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16">

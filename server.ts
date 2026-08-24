@@ -58,8 +58,13 @@ async function startServer() {
       let metaTags = `
         <meta property="og:type" content="website" />
         <meta property="og:title" content="ARENA SPORT" />
-        <meta property="og:description" content="Il portale dei video sportivi." />
+        <meta property="og:description" content="Il portale dei video sportivi con i migliori highlights da YouTube." />
         <meta property="og:image" content="https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=1200&auto=format&fit=crop" />
+        <meta property="og:url" content="https://ais-pre-5o35cxqwct6jo7pa6nqpjd-132736654569.europe-west3.run.app/" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="ARENA SPORT" />
+        <meta name="twitter:description" content="Il portale dei video sportivi con i migliori highlights da YouTube." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=1200&auto=format&fit=crop" />
       `;
 
       // Se c'è un video ID nell'URL
@@ -83,8 +88,10 @@ async function startServer() {
                 <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
                 <meta property="og:description" content="Guarda ${title.replace(/"/g, '&quot;')} di ${channel.replace(/"/g, '&quot;')} su ARENA SPORT" />
                 <meta property="og:image" content="${thumb}" />
+                <meta property="og:url" content="https://ais-pre-5o35cxqwct6jo7pa6nqpjd-132736654569.europe-west3.run.app/?v=${videoId}" />
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}" />
+                <meta name="twitter:description" content="Guarda ${title.replace(/"/g, '&quot;')} di ${channel.replace(/"/g, '&quot;')} su ARENA SPORT" />
                 <meta name="twitter:image" content="${thumb}" />
               `;
             }
