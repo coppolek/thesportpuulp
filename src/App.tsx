@@ -14,6 +14,7 @@ import Footer from "./components/Footer";
 import Reveal from "./components/Reveal";
 import { EmptyPanel, ErrorPanel, FeaturedSkeleton, SkeletonCard } from "./components/Panels";
 import SettingsModal from "./components/SettingsModal";
+import { BellIcon, CloseIcon } from "./components/icons";
 
 export default function App() {
   const [activeId, setActiveId] = useState(CATEGORIES[0].id);
@@ -23,6 +24,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [newVideoToast, setNewVideoToast] = useState<{ video: Video, message: string } | null>(null);
   const [featuredId, setFeaturedId] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
       return new URLSearchParams(window.location.search).get("v");
@@ -119,6 +121,39 @@ export default function App() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Controlla nuovi highlights in background
+  useEffect(() => {
+    if (searchQuery) return; // Non facciamo polling durante le ricerche manuali
+
+    const cat = CATEGORIES.find((c) => c.id === activeId) ?? CATEGORIES[0];
+    const isHighlights = cat.query.toLowerCase().includes("highlights");
+    
+    if (isHighlights && !loading && !error && videos.length > 0) {
+      const topVideoId = videos[0].id;
+
+      const timer = setInterval(async () => {
+        try {
+          // bypassCache = true per cercare dati freschi su YouTube
+          const res = await fetchCategoryVideos(cat.query, order, false);
+          if (res.videos.length > 0) {
+            const latestVideo = res.videos[0];
+            // Se l'id del video più recente non corrisponde a quello che abbiamo, è nuovo!
+            if (latestVideo.id !== topVideoId) {
+              setNewVideoToast({
+                video: latestVideo,
+                message: "Nuovo video highlights disponibile!"
+              });
+            }
+          }
+        } catch (e) {
+          // silenzioso in background
+        }
+      }, 60000); // 1 minuto
+
+      return () => clearInterval(timer);
+    }
+  }, [activeId, order, searchQuery, loading, error, videos]);
 
   const scrollToPlayer = () => {
     document.getElementById("player")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -326,6 +361,48 @@ export default function App() {
           onClose={() => setShowSettings(false)}
           onSave={() => void load(true)}
         />
+
+        {/* Toast Notifica Nuovi Video */}
+        {newVideoToast && (
+          <div className="fixed bottom-4 right-4 z-50 max-w-sm border border-lime bg-pitch-950 p-4 shadow-2xl">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 shrink-0 rounded-full bg-lime/20 p-1.5 text-lime">
+                <BellIcon className="h-4 w-4" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-lime">
+                  {newVideoToast.message}
+                </h4>
+                <p className="mt-1 line-clamp-2 text-[13px] font-semibold text-chalk group-hover:text-lime">
+                  {newVideoToast.video.title}
+                </p>
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setNewVideoToast(null);
+                      handleSelect(newVideoToast.video);
+                    }}
+                    className="bg-lime px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-pitch-950 transition-colors hover:bg-white"
+                  >
+                    Guarda Ora
+                  </button>
+                  <button
+                    onClick={() => setNewVideoToast(null)}
+                    className="text-[10px] font-bold uppercase tracking-wider text-chalk-dim transition-colors hover:text-white"
+                  >
+                    Chiudi
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={() => setNewVideoToast(null)}
+                className="shrink-0 p-1 text-chalk-dim transition-colors hover:text-white"
+              >
+                <CloseIcon className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

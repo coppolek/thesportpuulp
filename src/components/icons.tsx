@@ -88,6 +88,20 @@ export const SearchIcon = ({ className = "h-4 w-4" }: IconProps) => (
   </svg>
 );
 
+export const BellIcon = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+);
+
+export const CloseIcon = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <path d="M18 6 6 18" />
+    <path d="M6 6l12 12" />
+  </svg>
+);
+
 export const WhistleIcon = ({ className = "h-5 w-5" }: IconProps) => (
   <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
     <path d="M13.5 9H21v3.2l-5.6 1.6a6.2 6.2 0 1 1-1.9-4.8Z" />
