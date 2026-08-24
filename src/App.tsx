@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { CATEGORIES } from "./data/categories";
 import { fetchCategoryVideos, fetchVideoById, type Order, type Video } from "./lib/youtube";
 import { formatClock } from "./lib/format";
@@ -6,6 +7,7 @@ import Ticker from "./components/Ticker";
 import Masthead from "./components/Masthead";
 import CategoryNav from "./components/CategoryNav";
 import TrendingSection from "./components/TrendingSection";
+import RecentlyWatchedSection from "./components/RecentlyWatchedSection";
 import Featured from "./components/Featured";
 import VideoCard from "./components/VideoCard";
 import Footer from "./components/Footer";
@@ -31,6 +33,18 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const seq = useRef(0);
+
+  const [recentlyWatched, setRecentlyWatched] = useState<Video[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("arena_sport_recent");
+        return saved ? JSON.parse(saved) : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
 
   const activeCat = useMemo(
     () => CATEGORIES.find((c) => c.id === activeId) ?? CATEGORIES[0],
@@ -124,6 +138,26 @@ export default function App() {
     setFeaturedId(v.id);
     window.history.pushState({}, "", `?v=${v.id}`);
     scrollToPlayer();
+
+    setRecentlyWatched(prev => {
+      const filtered = prev.filter(item => item.id !== v.id);
+      const updated = [v, ...filtered].slice(0, 10);
+      try {
+        localStorage.setItem("arena_sport_recent", JSON.stringify(updated));
+      } catch (err) {
+        console.error("Failed to save recently watched:", err);
+      }
+      return updated;
+    });
+  };
+
+  const handleClearRecent = () => {
+    setRecentlyWatched([]);
+    try {
+      localStorage.removeItem("arena_sport_recent");
+    } catch (err) {
+      console.error("Failed to clear recently watched:", err);
+    }
   };
 
   const featured = videos.find((v) => v.id === featuredId) ?? videos[0] ?? null;
@@ -144,6 +178,18 @@ export default function App() {
 
   return (
     <div id="top" className="relative min-h-screen overflow-x-clip font-body text-chalk">
+      {featured && (
+        <Helmet>
+          <title>{featured.title.replace(/"/g, '&quot;')} - ARENA SPORT</title>
+          <meta property="og:type" content="video.other" />
+          <meta property="og:title" content={featured.title.replace(/"/g, '&quot;')} />
+          <meta property="og:description" content={`Guarda ${featured.title.replace(/"/g, '&quot;')} di ${featured.channel.replace(/"/g, '&quot;')} su ARENA SPORT`} />
+          <meta property="og:image" content={featured.thumbnail} />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={featured.title.replace(/"/g, '&quot;')} />
+          <meta name="twitter:image" content={featured.thumbnail} />
+        </Helmet>
+      )}
       {/* strati ambientali */}
       <div aria-hidden="true" className="pitch-lines pointer-events-none fixed inset-0 opacity-40" />
       <div aria-hidden="true" className="noise-layer pointer-events-none fixed inset-0 z-[1]" />
@@ -176,6 +222,7 @@ export default function App() {
 
         <main>
           <TrendingSection activeId={featuredId} onSelect={handleSelect} />
+          <RecentlyWatchedSection activeId={featuredId} videos={recentlyWatched} onSelect={handleSelect} onClear={handleClearRecent} />
 
           {/* sezione in onda */}
           <div id="player" className="scroll-mt-[68px]">
