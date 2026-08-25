@@ -1,8 +1,9 @@
-import { CATEGORIES } from "../data/categories";
+import { getIcon, type Category } from "../data/categories";
 import type { Order } from "../lib/youtube";
 import { RefreshIcon, SettingsIcon } from "./icons";
 
 interface CategoryNavProps {
+  categories: Category[];
   activeId: string;
   onSelect: (id: string) => void;
   order: Order;
@@ -13,6 +14,7 @@ interface CategoryNavProps {
 }
 
 export default function CategoryNav({
+  categories,
   activeId,
   onSelect,
   order,
@@ -30,7 +32,7 @@ export default function CategoryNav({
           Campo //
         </span>
 
-        {CATEGORIES.map((c) => {
+        {categories.map((c) => {
           const active = c.id === activeId;
           return (
             <button
@@ -44,7 +46,7 @@ export default function CategoryNav({
               }`}
             >
               <span className="flex items-center gap-2">
-                {c.icon}
+                {getIcon(c.iconName)}
                 {c.label}
               </span>
             </button>

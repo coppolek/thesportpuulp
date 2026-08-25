@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { CATEGORIES } from "./data/categories";
 import { fetchCategoryVideos, fetchVideoById, type Order, type Video } from "./lib/youtube";
 import { formatClock } from "./lib/format";
 import Ticker from "./components/Ticker";
@@ -15,9 +14,11 @@ import Reveal from "./components/Reveal";
 import { EmptyPanel, ErrorPanel, FeaturedSkeleton, SkeletonCard } from "./components/Panels";
 import SettingsModal from "./components/SettingsModal";
 import { BellIcon, CloseIcon } from "./components/icons";
+import { subscribeToSettings, SiteSettings, DEFAULT_SETTINGS } from "./lib/settings";
 
 export default function App() {
-  const [activeId, setActiveId] = useState(CATEGORIES[0].id);
+  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [activeId, setActiveId] = useState(settings.categories[0]?.id || "");
   const [order, setOrder] = useState<Order>("date");
   const [videos, setVideos] = useState<Video[]>([]);
   const [nextPageToken, setNextPageToken] = useState<string | undefined>(undefined);
@@ -36,6 +37,19 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const seq = useRef(0);
 
+  useEffect(() => {
+    return subscribeToSettings((newSettings) => {
+      setSettings(newSettings);
+      setActiveId((currentId) => {
+        // If current category was deleted, fallback to the first one
+        if (!newSettings.categories.some(c => c.id === currentId)) {
+          return newSettings.categories[0]?.id || "";
+        }
+        return currentId;
+      });
+    });
+  }, []);
+
   const [recentlyWatched, setRecentlyWatched] = useState<Video[]>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -49,13 +63,13 @@ export default function App() {
   });
 
   const activeCat = useMemo(
-    () => CATEGORIES.find((c) => c.id === activeId) ?? CATEGORIES[0],
+    () => settings.categories.find((c) => c.id === activeId) ?? settings.categories[0],
     [activeId]
   );
 
   const load = useCallback(
     async (bypassCache = false) => {
-      const cat = CATEGORIES.find((c) => c.id === activeId) ?? CATEGORIES[0];
+      const cat = settings.categories.find((c) => c.id === activeId) ?? settings.categories[0];
       const q = searchQuery || cat.query;
       const ticket = ++seq.current;
       setLoading(true);
@@ -100,7 +114,7 @@ export default function App() {
 
   const loadMore = async () => {
     if (!nextPageToken || loadingMore) return;
-    const cat = CATEGORIES.find((c) => c.id === activeId) ?? CATEGORIES[0];
+    const cat = settings.categories.find((c) => c.id === activeId) ?? settings.categories[0];
     const q = searchQuery || cat.query;
     
     setLoadingMore(true);
@@ -126,7 +140,7 @@ export default function App() {
   useEffect(() => {
     if (searchQuery) return; // Non facciamo polling durante le ricerche manuali
 
-    const cat = CATEGORIES.find((c) => c.id === activeId) ?? CATEGORIES[0];
+    const cat = settings.categories.find((c) => c.id === activeId) ?? settings.categories[0];
     const isHighlights = cat.query.toLowerCase().includes("highlights");
     
     if (isHighlights && !loading && !error && videos.length > 0) {
@@ -204,7 +218,7 @@ export default function App() {
   const tickerItems = useMemo(
     () => [
       "Highlights e clip in tempo reale",
-      ...CATEGORIES.map((c) => c.label.toUpperCase()),
+      ...settings.categories.map((c) => c.label.toUpperCase()),
       "Aggiornato in diretta da YouTube",
       "8 discipline · un solo fischio d'inizio",
     ],
@@ -235,17 +249,17 @@ export default function App() {
 
       <div className="relative z-10">
         <Ticker items={tickerItems} />
-        <Masthead
+        <Masthead settings={settings}
           categoryLabel={searchQuery ? "Ricerca" : activeCat.label}
           videoCount={videos.length}
-          categoryCount={CATEGORIES.length}
+          categoryCount={settings.categories.length}
           searchQuery={searchQuery}
           onSearch={(q) => {
             setSearchQuery(q);
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         />
-        <CategoryNav
+        <CategoryNav categories={settings.categories}
           activeId={activeId}
           onSelect={handleCategory}
           order={order}
@@ -355,7 +369,7 @@ export default function App() {
           </section>
         </main>
 
-        <Footer onSelect={handleCategory} />
+        <Footer categories={settings.categories} settings={settings} onSelect={handleCategory} />
         <SettingsModal
           isOpen={showSettings}
           onClose={() => setShowSettings(false)}

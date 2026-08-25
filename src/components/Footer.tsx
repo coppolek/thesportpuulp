@@ -1,20 +1,24 @@
-import { CATEGORIES } from "../data/categories";
+import { getIcon, type Category } from "../data/categories";
 import { Brand } from "./Masthead";
 import { ArrowUpIcon } from "./icons";
+import type { SiteSettings } from "../lib/settings";
 
 interface FooterProps {
+  categories: Category[];
+  settings: SiteSettings;
   onSelect: (id: string) => void;
 }
 
-export default function Footer({ onSelect }: FooterProps) {
+export default function Footer({ categories, settings, onSelect }: FooterProps) {
   return (
     <footer className="border-t border-line bg-pitch-900/60">
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.3fr_1fr_1.1fr]">
         <div>
-          <Brand />
+          <h2 className="font-display text-2xl font-black italic tracking-tighter skew-item uppercase leading-none text-chalk">
+            {settings.niche}
+          </h2>
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-chalk-dim">
-            Il campo dove ogni sport trova il suo video: highlights, clip e momenti che fanno
-            saltare dalla sedia, organizzati per reparto e pronti al fischio d'inizio.
+            {settings.tagline}
           </p>
           <p className="mt-5 inline-flex items-center gap-2 border border-line px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-chalk-dim">
             <span className="inline-block h-1.5 w-1.5 bg-lime" />
@@ -27,7 +31,7 @@ export default function Footer({ onSelect }: FooterProps) {
             /// Categorie
           </h4>
           <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5">
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <li key={c.id}>
                 <button
                   onClick={() => onSelect(c.id)}
@@ -61,14 +65,14 @@ export default function Footer({ onSelect }: FooterProps) {
       <div className="border-t border-line">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-6">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-chalk-dim">
-            © 2026 Arena Sport — fischio d'inizio dato a Milano
+            © 2026 {settings.niche}
           </p>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="inline-flex items-center gap-2 border border-line px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-chalk-dim transition-colors hover:border-lime hover:text-lime"
           >
             <ArrowUpIcon className="h-3.5 w-3.5" />
-            Torna in tribuna
+            Torna su
           </button>
         </div>
       </div>
