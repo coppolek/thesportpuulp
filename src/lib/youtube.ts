@@ -169,6 +169,46 @@ export async function fetchTrendingVideos(): Promise<Video[]> {
   return videos;
 }
 
+export interface Comment {
+  id: string;
+  author: string;
+  authorAvatar: string;
+  text: string;
+  likeCount: number;
+  publishedAt: string;
+}
+
+export async function fetchVideoComments(id: string): Promise<Comment[]> {
+  const url = new URL(`${BASE}/commentThreads`);
+  url.search = new URLSearchParams({
+    part: "snippet",
+    videoId: id,
+    maxResults: "20",
+    order: "relevance",
+    key: getApiKey(),
+  }).toString();
+  
+  try {
+    const res = await fetch(url.toString());
+    if (!res.ok) return [];
+    
+    const json = await res.json();
+    return (json.items ?? []).map((i: any) => {
+      const topLevel = i.snippet?.topLevelComment?.snippet;
+      return {
+        id: i.id,
+        author: topLevel?.authorDisplayName || "Utente",
+        authorAvatar: topLevel?.authorProfileImageUrl || "",
+        text: decodeHtml(topLevel?.textDisplay || ""),
+        likeCount: topLevel?.likeCount || 0,
+        publishedAt: topLevel?.publishedAt || "",
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchVideoById(id: string): Promise<Video | null> {
   const vUrl = new URL(`${BASE}/videos`);
   vUrl.search = new URLSearchParams({

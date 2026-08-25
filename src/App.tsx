@@ -15,6 +15,7 @@ import { EmptyPanel, ErrorPanel, FeaturedSkeleton, SkeletonCard } from "./compon
 import SettingsModal from "./components/SettingsModal";
 import { BellIcon, CloseIcon } from "./components/icons";
 import { subscribeToSettings, SiteSettings, DEFAULT_SETTINGS } from "./lib/settings";
+import { BannerDisplay } from "./components/BannerDisplay";
 
 export default function App() {
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
@@ -32,6 +33,18 @@ export default function App() {
     }
     return null;
   });
+  const [externalFeatured, setExternalFeatured] = useState<Video | null>(null);
+
+  useEffect(() => {
+    if (featuredId && !videos.some(v => v.id === featuredId)) {
+      fetchVideoById(featuredId).then(v => {
+        if (v) setExternalFeatured(v);
+      });
+    } else {
+      setExternalFeatured(null);
+    }
+  }, [featuredId, videos]);
+
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -209,7 +222,7 @@ export default function App() {
     }
   };
 
-  const featured = videos.find((v) => v.id === featuredId) ?? videos[0] ?? null;
+  const featured = externalFeatured || (videos.find((v) => v.id === featuredId) ?? videos[0] ?? null);
   const queue = useMemo(
     () => (featured ? videos.filter((v) => v.id !== featured.id) : []),
     [videos, featured]
@@ -227,12 +240,27 @@ export default function App() {
 
   return (
     <div id="top" className="relative min-h-screen overflow-x-clip font-body text-chalk">
+      {settings.themeColor && (
+        <style>{`
+          :root {
+            --color-lime: ${settings.themeColor};
+            --color-lime-deep: ${settings.themeColor}dd;
+          }
+        `}</style>
+      )}
+      <Helmet>
+        <title>{featured ? `${featured.title.replace(/"/g, '&quot;')} - ${settings.niche}` : (searchQuery ? `Ricerca: ${searchQuery} - ${settings.niche}` : (activeCat?.seoTitle || `${activeCat?.label} - ${settings.niche}` || settings.niche))}</title>
+        <meta name="description" content={featured ? `Guarda ${featured.title.replace(/"/g, '&quot;')} di ${featured.channel.replace(/"/g, '&quot;')} su ${settings.niche}` : (searchQuery ? `Risultati per "${searchQuery}" su ${settings.niche}` : (activeCat?.seoDescription || settings.tagline))} />
+        {(!featured && !searchQuery && activeCat?.seoImage) && <meta property="og:image" content={activeCat.seoImage} />}
+        {(!featured && !searchQuery && activeCat?.seoImage) && <meta name="twitter:image" content={activeCat.seoImage} />}
+        {(!featured) && <meta property="og:title" content={searchQuery ? `Ricerca: ${searchQuery} - ${settings.niche}` : (activeCat?.seoTitle || `${activeCat?.label} - ${settings.niche}`)} />}
+        {(!featured) && <meta property="og:description" content={searchQuery ? `Risultati per "${searchQuery}" su ${settings.niche}` : (activeCat?.seoDescription || settings.tagline)} />}
+      </Helmet>
       {featured && (
         <Helmet>
-          <title>{featured.title.replace(/"/g, '&quot;')} - ARENA SPORT</title>
           <meta property="og:type" content="video.other" />
           <meta property="og:title" content={featured.title.replace(/"/g, '&quot;')} />
-          <meta property="og:description" content={`Guarda ${featured.title.replace(/"/g, '&quot;')} di ${featured.channel.replace(/"/g, '&quot;')} su ARENA SPORT`} />
+          <meta property="og:description" content={`Guarda ${featured.title.replace(/"/g, '&quot;')} di ${featured.channel.replace(/"/g, '&quot;')} su ${settings.niche}`} />
           <meta property="og:image" content={featured.thumbnail} />
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content={featured.title.replace(/"/g, '&quot;')} />
@@ -259,6 +287,9 @@ export default function App() {
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         />
+        
+        <BannerDisplay banners={settings.banners || []} position="header" className="my-0 border-b border-line bg-pitch-900" />
+        
         <CategoryNav categories={settings.categories}
           activeId={activeId}
           onSelect={handleCategory}
@@ -297,6 +328,7 @@ export default function App() {
           </div>
 
           <TrendingSection activeId={featuredId} onSelect={handleSelect} />
+          <BannerDisplay banners={settings.banners || []} position="sidebar" />
           <RecentlyWatchedSection activeId={featuredId} videos={recentlyWatched} onSelect={handleSelect} onClear={handleClearRecent} />
 
           {/* griglia del reparto */}
@@ -325,6 +357,8 @@ export default function App() {
                 </div>
               </Reveal>
             </div>
+            
+            <BannerDisplay banners={settings.banners || []} position="in-feed" />
 
             <div className="mt-9">
               {loading ? (
@@ -368,6 +402,8 @@ export default function App() {
             </div>
           </section>
         </main>
+
+        <BannerDisplay banners={settings.banners || []} position="footer" className="mt-8 mb-0 pb-12" />
 
         <Footer categories={settings.categories} settings={settings} onSelect={handleCategory} />
         <SettingsModal

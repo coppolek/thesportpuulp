@@ -1,13 +1,79 @@
 import { useEffect, useState, useRef } from "react";
-import type { Video } from "../lib/youtube";
+import { fetchVideoComments, type Comment, type Video } from "../lib/youtube";
 import { formatDate, formatDuration, formatViews } from "../lib/format";
-import { CalendarIcon, ExternalIcon, EyeIcon, PlayIcon, ShareIcon, CheckIcon } from "./icons";
+import { CalendarIcon, ExternalIcon, EyeIcon, PlayIcon, MessageSquareIcon } from "./icons";
+import ShareButton from "./ShareButton";
 
 interface FeaturedProps {
   video: Video;
   queue: Video[];
   categoryName: string;
   onSelect: (v: Video) => void;
+}
+
+function VideoComments({ videoId }: { videoId: string }) {
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    fetchVideoComments(videoId).then((res) => {
+      if (active) {
+        setComments(res);
+        setLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [videoId]);
+
+  if (loading) {
+    return (
+      <div className="mt-8 border-t border-line pt-6">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-chalk-dim font-bold animate-pulse">
+          /// Caricamento commenti...
+        </p>
+      </div>
+    );
+  }
+
+  if (comments.length === 0) return null;
+
+  return (
+    <div className="mt-8 border-t border-line pt-6">
+      <div className="flex items-center gap-2 mb-6 text-lime">
+        <MessageSquareIcon className="h-5 w-5" />
+        <h3 className="text-sm font-bold uppercase tracking-wider text-chalk">Commenti ({comments.length})</h3>
+      </div>
+      <div className="space-y-6">
+        {comments.map((comment) => (
+          <div key={comment.id} className="flex gap-4 items-start">
+            <img 
+              src={comment.authorAvatar} 
+              alt={comment.author}
+              className="w-10 h-10 rounded-full border border-line bg-pitch-900 shrink-0"
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[11px] font-bold text-chalk">{comment.author}</span>
+                <span className="text-[10px] text-chalk-dim">{formatDate(comment.publishedAt)}</span>
+              </div>
+              <p className="text-sm text-chalk-dim leading-relaxed break-words line-clamp-4">
+                {comment.text}
+              </p>
+              {comment.likeCount > 0 && (
+                <div className="mt-2 text-[10px] uppercase tracking-wider text-chalk-dim flex items-center gap-1 font-bold">
+                  👍 {comment.likeCount}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 declare global {
@@ -20,20 +86,7 @@ export default function Featured({ video, queue, categoryName, onSelect }: Featu
   const initial = video.channel.trim().charAt(0).toUpperCase() || "Y";
   const [showAd, setShowAd] = useState(false);
   const [countdown, setCountdown] = useState(5);
-  const [copied, setCopied] = useState(false);
   const adPushed = useRef(false);
-
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      const shareUrl = `${window.location.href.split('?')[0]}?v=${video.id}`;
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy", err);
-    }
-  };
 
   useEffect(() => {
     setShowAd(true);
@@ -143,14 +196,11 @@ export default function Featured({ video, queue, categoryName, onSelect }: Featu
                     {formatDuration(video.duration)}
                   </span>
                 )}
-                <button
-                  onClick={handleShare}
-                  className="relative ml-auto flex items-center gap-1.5 border border-line bg-pitch-900/80 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-chalk transition-colors hover:border-lime/60 hover:text-lime sm:px-3 sm:py-2"
-                  title="Condividi video"
-                >
-                  {copied ? <CheckIcon className="h-4 w-4 text-lime" /> : <ShareIcon className="h-4 w-4" />}
-                  <span className="hidden sm:inline">{copied ? "Link Copiato!" : "Condividi"}</span>
-                </button>
+                <ShareButton 
+                  videoId={video.id}
+                  withText={true}
+                  className="ml-auto flex items-center gap-1.5 border border-line bg-pitch-900/80 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-chalk hover:border-lime/60 hover:text-lime sm:px-3 sm:py-2"
+                />
               </div>
 
               {video.description && (
@@ -158,6 +208,7 @@ export default function Featured({ video, queue, categoryName, onSelect }: Featu
                   {video.description}
                 </p>
               )}
+              <VideoComments videoId={video.id} />
 
 
             </div>
@@ -176,9 +227,17 @@ export default function Featured({ video, queue, categoryName, onSelect }: Featu
             <ul className="max-h-[560px] flex-1 divide-y divide-line/60 overflow-y-auto">
               {queue.map((v, i) => (
                 <li key={v.id}>
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => onSelect(v)}
-                    className="group flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-pitch-800"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onSelect(v);
+                      }
+                    }}
+                    className="group flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-pitch-800 cursor-pointer"
                   >
                     <span className="mt-0.5 text-[11px] font-bold text-lime-deep tabular-nums group-hover:text-lime">
                       {String(i + 2).padStart(2, "0")}
@@ -204,7 +263,11 @@ export default function Featured({ video, queue, categoryName, onSelect }: Featu
                         {v.channel} · {formatViews(v.views)} views
                       </span>
                     </span>
-                  </button>
+                    <ShareButton 
+                      videoId={v.id} 
+                      className="ml-auto opacity-0 group-hover:opacity-100 text-chalk-dim hover:text-lime" 
+                    />
+                  </div>
                 </li>
               ))}
             </ul>

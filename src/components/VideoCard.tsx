@@ -1,7 +1,9 @@
-import { useState } from "react";
 import type { Video } from "../lib/youtube";
+
+
 import { formatDate, formatDuration, formatViews } from "../lib/format";
-import { PlayIcon, ShareIcon, CheckIcon } from "./icons";
+import { PlayIcon } from "./icons";
+import ShareButton from "./ShareButton";
 import Reveal from "./Reveal";
 
 interface VideoCardProps {
@@ -12,20 +14,6 @@ interface VideoCardProps {
 }
 
 export default function VideoCard({ video, index, active, onSelect }: VideoCardProps) {
-  const [copied, setCopied] = useState(false);
-
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      const shareUrl = `${window.location.href.split('?')[0]}?v=${video.id}`;
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy", err);
-    }
-  };
-
   return (
     <Reveal delay={(index % 4) * 70}>
       <article
@@ -78,18 +66,10 @@ export default function VideoCard({ video, index, active, onSelect }: VideoCardP
             <h3 className="text-[15px] font-bold leading-snug line-clamp-2 transition-colors duration-200 group-hover:text-lime">
               {video.title}
             </h3>
-            <button
-              onClick={handleShare}
-              className="relative shrink-0 p-1.5 text-chalk-dim hover:text-lime transition-colors"
-              title="Condividi"
-            >
-              {copied ? <CheckIcon className="h-4 w-4 text-lime" /> : <ShareIcon className="h-4 w-4" />}
-              {copied && (
-                <span className="absolute -top-8 right-0 rounded bg-lime px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-black shadow-lg">
-                  Copiato!
-                </span>
-              )}
-            </button>
+            <ShareButton 
+              videoId={video.id}
+              className="text-chalk-dim hover:text-lime"
+            />
           </div>
           <p className="mt-2.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-chalk-dim font-bold">
             <span className="max-w-[44%] truncate">{video.channel}</span>

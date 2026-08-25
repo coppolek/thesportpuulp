@@ -6,6 +6,9 @@ export interface Category {
   query: string;
   tagline: string;
   iconName: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoImage?: string;
 }
 
 const S = {
